@@ -342,20 +342,7 @@ function HomePage() {
                 Explore Services
               </button>
             </div>
-            <div className="hero-stats">
-              <div className="stat-item">
-                <div className="stat-number">500+</div>
-                <div className="stat-label">Projects Delivered</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-number">200+</div>
-                <div className="stat-label">Happy Clients</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-number">50+</div>
-                <div className="stat-label">Team Experts</div>
-              </div>
-            </div>
+          
           </div>
           <div className="home-visual">
             <div className="hero-image-container">
