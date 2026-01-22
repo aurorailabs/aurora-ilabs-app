@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { Routes, Route, Link } from 'react-router-dom';
 import './App.css';
-import Careers from './pages/Careers';
+import emailjs from 'emailjs-com';
 
 function HomePage() {
   const [activeSection, setActiveSection] = useState('home');
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [contactForm, setContactForm] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+  const [contactLoading, setContactLoading] = useState(false);
+  const [contactMessage, setContactMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,7 +41,7 @@ function HomePage() {
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      const navHeight = 80; // Approximate navbar height
+      const navHeight = 60; // Approximate navbar height
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - navHeight;
 
@@ -46,10 +54,89 @@ function HomePage() {
     }
   };
 
+  const handleContactInputChange = (e) => {
+    setContactForm({
+      ...contactForm,
+      [e.target.name]: e.target.value
+    });
+    // Clear message when user starts typing
+    if (contactMessage.text) {
+      setContactMessage({ type: '', text: '' });
+    }
+  };
+
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    alert('Thank you for your message! We will get back to you soon.');
-    e.target.reset();
+    
+    // Validate form
+    if (!contactForm.name.trim()) {
+      setContactMessage({ type: 'error', text: 'Please enter your name' });
+      return;
+    }
+    if (!contactForm.email.trim()) {
+      setContactMessage({ type: 'error', text: 'Please enter your email' });
+      return;
+    }
+    if (!contactForm.message.trim()) {
+      setContactMessage({ type: 'error', text: 'Please enter your message' });
+      return;
+    }
+
+    setContactLoading(true);
+    setContactMessage({ type: '', text: '' });
+
+    // EmailJS configuration - Get values from environment variables
+    const serviceId = process.env.REACT_APP_EMAILJS_SERVICE_ID;
+    const templateId = process.env.REACT_APP_EMAILJS_TEMPLATE_ID;
+    const publicKey = process.env.REACT_APP_EMAILJS_PUBLIC_KEY;
+
+    // Check if EmailJS is configured
+    if (!serviceId || !templateId || !publicKey || 
+        serviceId === 'your_service_id_here' || 
+        templateId === 'your_template_id_here' || 
+        publicKey === 'your_public_key_here') {
+      setContactMessage({ 
+        type: 'error', 
+        text: 'EmailJS is not configured. Please set up your EmailJS credentials in the .env file. See EMAILJS_SETUP.md for instructions.' 
+      });
+      setContactLoading(false);
+      return;
+    }
+
+    // Prepare template parameters matching EmailJS template variables
+    const templateParams = {
+      name: contactForm.name,
+      email: contactForm.email,
+      title: contactForm.subject || 'Contact Form Submission',
+      message: contactForm.message,
+      time: new Date().toLocaleString()
+    };
+
+    // Send email using EmailJS
+    emailjs.send(serviceId, templateId, templateParams, publicKey)
+      .then((response) => {
+        setContactMessage({ 
+          type: 'success', 
+          text: 'Thank you! Your message has been sent successfully. We will get back to you soon.' 
+        });
+        
+        // Reset form
+        setContactForm({
+          name: '',
+          email: '',
+          subject: '',
+          message: ''
+        });
+        setContactLoading(false);
+      })
+      .catch((error) => {
+        console.error('EmailJS Error:', error);
+        setContactMessage({ 
+          type: 'error', 
+          text: 'Sorry, there was an error sending your message. Please try again later or email us directly at contactus@vectraxtech.com' 
+        });
+        setContactLoading(false);
+      });
   };
 
   return (
@@ -58,8 +145,13 @@ function HomePage() {
       <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
         <div className="nav-container">
           <Link to="/" className="logo">
-            <span className="logo-icon">✨</span>
-            Aurora iLabs
+            <div className="vectrax-logo">
+              <img 
+                src="/vx_logo-removebg-preview.png" 
+                alt="vectraX Technologies Logo" 
+                className="vectrax-logo-img"
+              />
+            </div>
           </Link>
           
           {/* Hamburger Menu Icon - Mobile Only */}
@@ -105,9 +197,6 @@ function HomePage() {
               </a>
             </li>
             <li>
-              <Link to="/careers" onClick={() => setMobileMenuOpen(false)}>Careers</Link>
-            </li>
-            <li>
               <a 
                 href="#contact" 
                 className={activeSection === 'contact' ? 'active' : ''}
@@ -126,8 +215,13 @@ function HomePage() {
         <div className="mobile-menu-content" onClick={(e) => e.stopPropagation()}>
           <div className="mobile-menu-header">
             <Link to="/" className="mobile-logo" onClick={() => setMobileMenuOpen(false)}>
-              <span className="logo-icon">✨</span>
-              Aurora iLabs
+              <div className="vectrax-logo">
+                <img 
+                  src="/vx_logo-removebg-preview.png" 
+                  alt="vectraX Technologies Logo" 
+                  className="vectrax-logo-img"
+                />
+              </div>
             </Link>
             <button 
               className="mobile-menu-close"
@@ -164,9 +258,6 @@ function HomePage() {
               >
                 Services
               </a>
-            </li>
-            <li>
-              <Link to="/careers" onClick={() => setMobileMenuOpen(false)}>Careers</Link>
             </li>
             <li>
               <a 
@@ -215,37 +306,85 @@ function HomePage() {
         </svg>
       </div>
 
-      {/* Home Section */}
+      {/* Home Section - Enhanced Hero */}
       <section id="home" className="section home-section">
+        <div className="hero-background">
+          <div className="hero-gradient"></div>
+          <div className="floating-shapes">
+            <div className="shape shape-1"></div>
+            <div className="shape shape-2"></div>
+            <div className="shape shape-3"></div>
+          </div>
+        </div>
         <div className="container">
           <div className="home-content">
+            <div className="hero-badge">
+              <span className="badge-icon">🚀</span>
+              <span>Innovation at Your Fingertips</span>
+            </div>
             <h1 className="home-title">
-              Welcome to <span className="highlight">Aurora iLabs</span>
+              Transform Your Business with
+              <span className="highlight"> vectraX Technologies</span>
             </h1>
             <p className="home-subtitle">
-              Unlocking Your Digital Potential
+              Cutting-Edge Software Solutions & Digital Products
             </p>
             <p className="home-description">
-              A forward-thinking software products and services company dedicated to helping 
-              businesses unlock their full digital potential. We create technology experiences 
-              that are intuitive, scalable, and truly transformative.
+              We build powerful software products and deliver exceptional services that drive 
+              digital transformation. From enterprise applications to cloud solutions, 
+              we create technology that scales with your business.
             </p>
             <div className="cta-buttons">
               <button className="btn btn-primary" onClick={() => scrollToSection('services')}>
-                Our Services
+                View Our Services
               </button>
-              <button className="btn btn-secondary" onClick={() => scrollToSection('contact')}>
-                Get in Touch
+              <button className="btn btn-secondary" onClick={() => scrollToSection('services')}>
+                Explore Services
               </button>
+            </div>
+            <div className="hero-stats">
+              <div className="stat-item">
+                <div className="stat-number">500+</div>
+                <div className="stat-label">Projects Delivered</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-number">200+</div>
+                <div className="stat-label">Happy Clients</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-number">50+</div>
+                <div className="stat-label">Team Experts</div>
+              </div>
             </div>
           </div>
-          {/* <div className="home-image">
-            <div className="floating-card">
-              <div className="card-icon">✨</div>
-              <h3>Digital Transformation</h3>
-              <p>Unlocking potential</p>
+          <div className="home-visual">
+            <div className="hero-image-container">
+              <img 
+                src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop&q=80" 
+                alt="Digital Transformation" 
+                className="hero-image"
+              />
+              <div className="image-overlay"></div>
             </div>
-          </div> */}
+            <div className="visual-cards-grid">
+              <div className="visual-card card-1">
+                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=200&h=200&fit=crop&q=80" alt="Enterprise Apps" className="visual-card-image" />
+                <h4>Enterprise Apps</h4>
+              </div>
+              <div className="visual-card card-2">
+                <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=200&h=200&fit=crop&q=80" alt="Cloud Solutions" className="visual-card-image" />
+                <h4>Cloud Solutions</h4>
+              </div>
+              <div className="visual-card card-3">
+                <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?w=200&h=200&fit=crop&q=80" alt="UX/UI Design" className="visual-card-image" />
+                <h4>UX/UI Design</h4>
+              </div>
+              <div className="visual-card card-4">
+                <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=200&h=200&fit=crop&q=80" alt="API Engineering" className="visual-card-image" />
+                <h4>API Engineering</h4>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -254,65 +393,18 @@ function HomePage() {
         <div className="container">
           <h2 className="section-title">About Us</h2>
           <div className="about-content">
-            <div className="about-text">
-              <h3>Who We Are</h3>
-              <p>
-                Aurora iLabs is a forward-thinking software products and services company 
-                dedicated to helping businesses unlock their full digital potential. Built on 
-                the foundations of innovation, quality, and customer-centricity, we strive to 
-                create technology experiences that are intuitive, scalable, and truly transformative. 
-                Our mission is to empower organizations with cutting-edge solutions that not only 
-                solve real problems but also elevate the way they operate, serve, and grow.
-              </p>
-              <p>
-                At Aurora iLabs, we believe that technology should feel effortless. This philosophy 
-                shapes every product we build and every service we deliver. Whether it's developing 
-                a custom application, modernizing legacy systems, crafting engaging user experiences, 
-                or deploying full-scale digital transformation programs, we focus on creating solutions 
-                that are simple, usable, and impactful.
-              </p>
-              <h3>Innovation at Our Core</h3>
-              <p>
-                Innovation sits at the heart of Aurora iLabs. We continuously explore emerging 
-                technologies—AI, automation, data intelligence, cloud-native platforms, and 
-                next-gen user experience design—to bring smarter and more efficient solutions to 
-                our clients. By staying ahead of the curve, we ensure that businesses partnering 
-                with us are equipped with future-ready tools that deliver long-term value.
-              </p>
-              <h3>Customer-Centric Excellence</h3>
-              <p>
-                What truly differentiates Aurora iLabs is our unwavering commitment to exceptional 
-                customer experience. We don't just deliver technology—we build relationships, 
-                understand aspirations, and become long-term partners in our clients' success. Our 
-                agile and collaborative work culture ensures transparency, adaptability, and continuous 
-                improvement throughout the engagement journey.
-              </p>
-              <h3>Our Commitment</h3>
-              <p>
-                Aurora iLabs is deeply committed to excellence and continuous learning. We foster a 
-                culture where ideas are encouraged, experimentation is welcomed, and talent is 
-                constantly evolving. Our vision is to be a trusted technology partner for businesses 
-                worldwide, known for our innovation, reliability, and dedication to creating world-class 
-                digital experiences.
-              </p>
+            <div className="about-image-wrapper">
+              <img 
+                src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=600&fit=crop&q=80" 
+                alt="vectraX Technologies Team" 
+                className="about-image"
+              />
+              <div className="about-image-overlay"></div>
             </div>
-            <div className="about-stats">
-              <div className="stat-card">
-                <div className="stat-number">500+</div>
-                <div className="stat-label">Projects Completed</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-number">200+</div>
-                <div className="stat-label">Happy Clients</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-number">50+</div>
-                <div className="stat-label">Team Members</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-number">10+</div>
-                <div className="stat-label">Years Experience</div>
-              </div>
+            <div className="about-text">
+              <p>
+                vectraX Technologies is a forward-thinking software products and services company focused on helping businesses unlock their digital potential. We design and build simple, scalable, and impactful technology solutions—from custom applications and system modernization to user-centric experiences and digital transformation initiatives. Driven by innovation, quality, and a strong customer focus, we use modern technologies to solve real business challenges. We believe technology should feel effortless, and we work as long-term partners to help our clients operate better, grow faster, and stay future-ready.
+              </p>
             </div>
           </div>
         </div>
@@ -325,68 +417,56 @@ function HomePage() {
           <p className="section-subtitle">Comprehensive solutions tailored to unlock your digital potential</p>
           <div className="services-grid">
             <div className="service-card">
-              <div className="service-icon">🚀</div>
-              <h3>Product Engineering</h3>
+              <div className="service-image-wrapper">
+                <img src="https://images.unsplash.com/photo-1551650975-87deedd944c3?w=400&h=300&fit=crop&q=80" alt="Product Development" className="service-image" />
+                <div className="service-image-overlay"></div>
+              </div>
+              <div className="service-card-content">
+              <h3>Product Development</h3>
               <p>
                 End-to-end product development from concept to launch. We build modern digital 
                 solutions that enhance business performance and streamline operations.
               </p>
+              </div>
             </div>
             <div className="service-card">
-              <div className="service-icon">💼</div>
-              <h3>Enterprise Applications</h3>
+              <div className="service-image-wrapper">
+                <img src="https://images.unsplash.com/photo-1556740758-90de374c12ad?w=400&h=300&fit=crop&q=80" alt="e-Commerce/Websites" className="service-image" />
+                <div className="service-image-overlay"></div>
+              </div>
+              <div className="service-card-content">
+              <h3>e-Commerce/Websites</h3>
               <p>
-                Custom enterprise application development and legacy system modernization. 
-                Scalable solutions that transform how your business operates.
+                Custom e-commerce platforms and professional websites. Full-featured solutions with 
+                payment integration, inventory management, and responsive design.
               </p>
+              </div>
             </div>
             <div className="service-card">
-              <div className="service-icon">🎨</div>
-              <h3>UX/UI Design</h3>
+              <div className="service-image-wrapper">
+                <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop&q=80" alt="Digital Solutions" className="service-image" />
+                <div className="service-image-overlay"></div>
+              </div>
+              <div className="service-card-content">
+              <h3>Digital Solutions</h3>
               <p>
-                Engaging user experiences crafted with precision. Next-gen design that makes 
-                technology feel effortless and intuitive for your users.
+                Comprehensive digital transformation solutions. Tailored software and systems 
+                that perfectly fit your business needs and drive digital innovation.
               </p>
+              </div>
             </div>
             <div className="service-card">
-              <div className="service-icon">☁️</div>
-              <h3>Cloud Solutions</h3>
+              <div className="service-image-wrapper">
+                <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=300&fit=crop&q=80" alt="Internship" className="service-image" />
+                <div className="service-image-overlay"></div>
+              </div>
+              <div className="service-card-content">
+              <h3>Internship</h3>
               <p>
-                Cloud-native platforms and infrastructure. Secure, scalable, and optimized 
-                solutions that deliver long-term value and future-ready capabilities.
+                Hands-on learning opportunities for aspiring developers. Gain real-world experience 
+                working on live projects and develop skills in modern technologies.
               </p>
-            </div>
-            <div className="service-card">
-              <div className="service-icon">🔌</div>
-              <h3>API Engineering</h3>
-              <p>
-                Robust API development and integration services. Connect your systems seamlessly 
-                and enable powerful integrations across your digital ecosystem.
-              </p>
-            </div>
-            <div className="service-card">
-              <div className="service-icon">⚙️</div>
-              <h3>DevOps</h3>
-              <p>
-                Streamlined development workflows and automated deployment pipelines. 
-                Accelerate delivery while maintaining quality and reliability.
-              </p>
-            </div>
-            <div className="service-card">
-              <div className="service-icon">✅</div>
-              <h3>QA Automation</h3>
-              <p>
-                Comprehensive testing and quality assurance automation. Ensure your products 
-                meet the highest standards of quality and performance.
-              </p>
-            </div>
-            <div className="service-card">
-              <div className="service-icon">🤝</div>
-              <h3>Managed Services</h3>
-              <p>
-                Ongoing support and maintenance services. Long-term partnerships that ensure 
-                your digital solutions continue to deliver exceptional value.
-              </p>
+              </div>
             </div>
           </div>
         </div>
@@ -415,7 +495,7 @@ Telangana, India
                 <div className="info-icon">📧</div>
                 <div>
                   <h4>Email</h4>
-                  <p>contactus@aurorailabs.com<br /></p>
+                  <p>contactus@vectraxtech.com<br /></p>
                 </div>
               </div>
               <div className="info-item">
@@ -428,18 +508,59 @@ Telangana, India
             </div>
             <form className="contact-form" onSubmit={handleFormSubmit}>
               <div className="form-group">
-                <input type="text" placeholder="Your Name" required />
+                <input 
+                  type="text" 
+                  name="name"
+                  placeholder="Your Name" 
+                  value={contactForm.name}
+                  onChange={handleContactInputChange}
+                  required 
+                />
               </div>
               <div className="form-group">
-                <input type="email" placeholder="Your Email" required />
+                <input 
+                  type="email" 
+                  name="email"
+                  placeholder="Your Email" 
+                  value={contactForm.email}
+                  onChange={handleContactInputChange}
+                  required 
+                />
               </div>
               <div className="form-group">
-                <input type="text" placeholder="Subject" required />
+                <input 
+                  type="text" 
+                  name="subject"
+                  placeholder="Subject" 
+                  value={contactForm.subject}
+                  onChange={handleContactInputChange}
+                />
               </div>
               <div className="form-group">
-                <textarea placeholder="Your Message" rows="6" required></textarea>
+                <textarea 
+                  name="message"
+                  placeholder="Your Message" 
+                  rows="6" 
+                  value={contactForm.message}
+                  onChange={handleContactInputChange}
+                  required
+                ></textarea>
               </div>
-              <button type="submit" className="btn btn-primary">Send Message</button>
+              {contactMessage.text && (
+                <div className={`form-message ${contactMessage.type}`} style={{
+                  padding: '12px',
+                  borderRadius: '4px',
+                  marginBottom: '16px',
+                  backgroundColor: contactMessage.type === 'success' ? '#d4edda' : '#f8d7da',
+                  color: contactMessage.type === 'success' ? '#155724' : '#721c24',
+                  border: `1px solid ${contactMessage.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`
+                }}>
+                  {contactMessage.text}
+                </div>
+              )}
+              <button type="submit" className="btn btn-primary" disabled={contactLoading}>
+                {contactLoading ? 'Sending...' : 'Send Message'}
+              </button>
             </form>
           </div>
         </div>
@@ -450,7 +571,7 @@ Telangana, India
         <div className="container">
           <div className="footer-content">
             <div className="footer-section">
-              <h3>Aurora iLabs</h3>
+              <h3>vectraX Technologies</h3>
               <p>Unlocking Your Digital Potential</p>
             </div>
             <div className="footer-section">
@@ -459,7 +580,6 @@ Telangana, India
                 <li><a href="#home" onClick={(e) => { e.preventDefault(); scrollToSection('home'); }}>Home</a></li>
                 <li><a href="#about" onClick={(e) => { e.preventDefault(); scrollToSection('about'); }}>About Us</a></li>
                 <li><a href="#services" onClick={(e) => { e.preventDefault(); scrollToSection('services'); }}>Services</a></li>
-                <li><Link to="/careers">Careers</Link></li>
                 <li><a href="#contact" onClick={(e) => { e.preventDefault(); scrollToSection('contact'); }}>Contact</a></li>
               </ul>
             </div>
@@ -500,7 +620,7 @@ Telangana, India
             </div>
           </div>
           <div className="footer-bottom">
-            <p>&copy; 2024 Aurora iLabs. All rights reserved.</p>
+            <p>&copy; 2024 vectraX Technologies. All rights reserved.</p>
           </div>
         </div>
       </footer>
@@ -512,7 +632,6 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/careers" element={<Careers />} />
     </Routes>
   );
 }
