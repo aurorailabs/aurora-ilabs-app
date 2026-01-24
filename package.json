@@ -19,7 +19,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "deploy": "npm run build && firebase deploy"
+    "build:hostinger": "react-scripts build && cp public/.htaccess build/.htaccess && cp public/sitemap.xml build/sitemap.xml"
   },
   "eslintConfig": {
     "extends": [

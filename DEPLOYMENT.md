@@ -1,105 +1,167 @@
-# Firebase Deployment Guide
+# Hostinger Deployment Guide
 
-This guide will help you deploy your Aurora iLabs app to Firebase Hosting.
+This guide will help you deploy your vectraX Technologies app to Hostinger hosting.
 
 ## Prerequisites
 
-1. A Google account
-2. Node.js and npm installed (you already have this)
+1. A Hostinger account with hosting plan
+2. Node.js and npm installed on your local machine
+3. FTP/SFTP access to your Hostinger account (or File Manager access)
+4. Domain name configured: https://vectrax.in/
 
-## Step 1: Install Firebase CLI
+## Step 1: Build Your React App
 
-Open your terminal and run:
-
-```bash
-npm install -g firebase-tools
-```
-
-## Step 2: Login to Firebase
+Build your React application for production:
 
 ```bash
-firebase login
+npm install
+npm run build:hostinger
 ```
 
-This will open a browser window for you to authenticate with your Google account.
+This command will:
+- Create an optimized production build in the `build` folder
+- Copy the `.htaccess` file to the build folder (for React Router support)
+- Copy the `sitemap.xml` to the build folder
 
-## Step 3: Initialize Firebase in Your Project
+## Step 2: Access Your Hostinger File Manager
 
-Navigate to your project directory and run:
+1. Log in to your Hostinger account
+2. Go to **hPanel** (Hostinger Control Panel)
+3. Navigate to **Files** → **File Manager**
+4. Open your domain's root directory (usually `public_html`)
 
-```bash
-firebase init hosting
+## Step 3: Upload Files to Hostinger
+
+### Option A: Using File Manager (Recommended for first-time setup)
+
+1. In File Manager, navigate to your domain's root directory (`public_html`)
+2. **Delete or backup** any existing files (if this is a fresh deployment)
+3. Select all files from your local `build` folder
+4. Upload them to the `public_html` directory
+5. Make sure `.htaccess` file is uploaded (it might be hidden - enable "Show hidden files" in File Manager)
+
+### Option B: Using FTP/SFTP Client
+
+1. Get your FTP credentials from Hostinger hPanel:
+   - Go to **Files** → **FTP Accounts**
+   - Note your FTP host, username, and password
+
+2. Connect using an FTP client (FileZilla, Cyberduck, etc.):
+   - **Host**: Your FTP host (e.g., `ftp.yourdomain.com`)
+   - **Username**: Your FTP username
+   - **Password**: Your FTP password
+   - **Port**: 21 (FTP) or 22 (SFTP)
+
+3. Navigate to `public_html` directory
+4. Upload all files from your local `build` folder to `public_html`
+
+## Step 4: Verify File Structure
+
+After uploading, your `public_html` directory should contain:
+```
+public_html/
+├── .htaccess
+├── index.html
+├── sitemap.xml
+├── robots.txt
+├── favicon.ico
+├── manifest.json
+├── static/
+│   ├── css/
+│   └── js/
+└── [other assets]
 ```
 
-When prompted:
-1. **Select "Use an existing project"** (if you have one) or **"Create a new project"** (if you don't)
-2. **Select your Firebase project** (or create a new one)
-3. **What do you want to use as your public directory?** → Type: `build`
-4. **Configure as a single-page app (rewrite all urls to /index.html)?** → Type: `Yes`
-5. **Set up automatic builds and deploys with GitHub?** → Type: `No` (unless you want this)
-6. **File build/index.html already exists. Overwrite?** → Type: `No`
+## Step 5: Verify Your Website
 
-## Step 4: Build Your React App
-
-```bash
-npm run build
-```
-
-This creates an optimized production build in the `build` folder.
-
-## Step 5: Deploy to Firebase
-
-```bash
-firebase deploy
-```
-
-Or use the npm script:
-
-```bash
-npm run deploy
-```
-
-This will build your app and deploy it to Firebase Hosting.
-
-## Step 6: Access Your Deployed App
-
-After deployment, Firebase will provide you with a URL like:
-```
-https://your-project-id.web.app
-```
-or
-```
-https://your-project-id.firebaseapp.com
-```
+1. Visit https://vectrax.in/ in your browser
+2. Test all pages and navigation
+3. Check that React Router is working (try navigating to different sections)
+4. Verify that `https://vectrax.in/sitemap.xml` is accessible
+5. Verify that `https://vectrax.in/robots.txt` is accessible
 
 ## Future Deployments
 
-For future updates, simply run:
-```bash
-npm run deploy
-```
+For future updates:
 
-This will rebuild and redeploy your app.
+1. Make your changes to the code
+2. Run: `npm run build:hostinger`
+3. Upload only the changed files, or upload everything from the `build` folder to replace existing files
+4. Clear browser cache if needed
+
+## Important Configuration Notes
+
+### .htaccess File
+The `.htaccess` file is crucial for:
+- React Router to work properly (handles client-side routing)
+- GZIP compression (faster page loads)
+- Browser caching (better performance)
+- Security headers
+
+**Make sure the `.htaccess` file is uploaded!** If it's missing, React Router won't work correctly.
+
+### SSL/HTTPS
+Hostinger typically provides free SSL certificates. Make sure:
+1. SSL is enabled in your Hostinger hPanel
+2. Your site is accessible via `https://vectrax.in/`
+3. Force HTTPS redirects (can be configured in hPanel)
 
 ## Troubleshooting
 
-### If you get "firebase: command not found"
-- Make sure Firebase CLI is installed: `npm install -g firebase-tools`
-- Try using `npx firebase` instead of `firebase`
+### Issue: 404 errors when navigating to routes
+**Solution**: Make sure `.htaccess` file is uploaded to `public_html` root directory
 
-### If routing doesn't work
-- Make sure `firebase.json` has the rewrite rule (it's already configured)
-- Ensure you're deploying the `build` folder, not `public`
+### Issue: Website shows blank page
+**Solution**: 
+- Check browser console for errors
+- Verify all files from `build` folder are uploaded
+- Check file permissions (should be 644 for files, 755 for directories)
 
-### If build fails
-- Make sure all dependencies are installed: `npm install`
-- Check for any errors in the build output
+### Issue: CSS/JS files not loading
+**Solution**:
+- Check that `static` folder and its contents are uploaded
+- Verify file paths in browser console
+- Clear browser cache
 
-## Custom Domain (Optional)
+### Issue: Sitemap.xml not accessible
+**Solution**:
+- Verify `sitemap.xml` is in `public_html` root
+- Check file permissions (should be 644)
+- Try accessing directly: `https://vectrax.in/sitemap.xml`
 
-To use a custom domain:
-1. Go to Firebase Console → Hosting
-2. Click "Add custom domain"
-3. Follow the instructions to verify your domain
+### Issue: .htaccess not working
+**Solution**:
+- Verify mod_rewrite is enabled on Hostinger (contact support if needed)
+- Check `.htaccess` file syntax
+- Ensure file is named exactly `.htaccess` (with the dot at the beginning)
 
+## Performance Optimization
 
+### Enable GZIP Compression
+The `.htaccess` file already includes GZIP compression. Verify it's working:
+- Use tools like https://www.giftofspeed.com/gzip-test/ to check
+
+### Enable Browser Caching
+Already configured in `.htaccess` file.
+
+### CDN (Optional)
+Consider using a CDN for static assets:
+- Cloudflare (free tier available)
+- Hostinger CDN (if available in your plan)
+
+## Security Checklist
+
+✅ SSL/HTTPS enabled
+✅ Security headers configured (in `.htaccess`)
+✅ File permissions set correctly
+✅ Regular backups enabled in Hostinger
+
+## Support
+
+- Hostinger Support: https://www.hostinger.com/contact
+- Hostinger Knowledge Base: https://support.hostinger.com/
+
+## Additional Resources
+
+- React Router Documentation: https://reactrouter.com/
+- Apache .htaccess Guide: https://httpd.apache.org/docs/current/howto/htaccess.html

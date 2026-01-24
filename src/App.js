@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 import emailjs from 'emailjs-com';
+import SEO from './components/SEO';
 
 function HomePage() {
   const [activeSection, setActiveSection] = useState('home');
@@ -144,6 +145,7 @@ function HomePage() {
 
   return (
     <div className="App">
+      <SEO />
       {/* Navigation */}
       <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
         <div className="nav-container">
